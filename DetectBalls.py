@@ -51,11 +51,11 @@ def get_color(imageFrame):
 
     print(dom0)
 
-    if dom0 in range(106, 180): #and dom1 in range(52,256) and dom2 in range(111, 255):
+    if dom0 in range(160, 180): #and dom1 in range(52,256) and dom2 in range(111, 255):
         print("RED")
-    elif dom0 in range(40, 80): #and dom1 in range(52, 255) and dom2 in range(72, 255):
+    elif dom0 in range(70, 89): #and dom1 in range(52, 255) and dom2 in range(72, 255):
         print("GREEN")  
-    elif dom0 in range(81, 105): #and dom1 in range(80, 255) and dom2 in range(2, 255):
+    elif dom0 in range(90, 105): #and dom1 in range(80, 255) and dom2 in range(2, 255):
         print("BLUE")  
     else:
         print("YELLOW")
@@ -83,11 +83,11 @@ def find_ball(img):
 
     min_conf_threshold = 0.7 # I changed this
     # set model parameters
-    model.conf = 0.25  # NMS confidence threshold
+    model.conf = 0.6  # NMS confidence threshold
     model.iou = 0.45  # NMS IoU threshold
     model.agnostic = False  # NMS class-agnostic
     model.multi_label = True # NMS multiple labels per box
-    model.max_det = 1000  # maximum number of detections per image
+    model.max_det = 3  # maximum number of detections per image
 
     frame = img.copy()
     results = model(frame)
@@ -97,22 +97,22 @@ def find_ball(img):
     scores = predictions[:, 4]
     classes = predictions[:, 5]
     # Draws Bounding Box onto image
-    #results.render() 
+    results.render() 
     
 
     # Initialize frame rate calculation
-    frame_rate_calc = 30
-    freq = cv2.getTickFrequency()
+    #frame_rate_calc = 30
+    #freq = cv2.getTickFrequency()
 
-    frame_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    #frame_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     
 
     #imW, imH = int(400), int(300)
     imW, imH = int(640), int(640)
-    frame_resized = cv2.resize(frame_rgb, (imW, imH))
+    #frame_resized = cv2.resize(frame_rgb, (imW, imH))
     #input_data = np.expand_dims(frame_resized, axis=0)
 
-    max_score = 0
+    #max_score = 0
     #max_index = 0
     
     # Loop over all detections and draw detection box if confidence is above minimum threshold
@@ -121,36 +121,61 @@ def find_ball(img):
 
         # Found desired object with decent confidence
         if ((labels[int(classes[i])] == cType.getType()) and (curr_score[i] > max_score) and (curr_score[i] > min_conf_threshold) and (curr_score[i] <= 1.0)):
-            time.sleep(3)
+            
             # Get bounding box coordinates and draw box
             # Interpreter can return coordinates that are outside of image dimensions, need to force them to be within image using max() and min()
             xmin = int(max(1,(boxes[i][0])))
             ymin = int(max(1,(boxes[i][1])))
             xmax = int(min(imW,(boxes[i][2])))
             ymax = int(min(imH,(boxes[i][3])))
+
+            print(xmin, xmax, ymin, ymax)
+
+            
+
+            xrange = (xmax - xmin) / 2
+            yrange = (ymax - ymin) / 2
+
+            xmin = int((xmin + xrange) - xrange/3)
+            xmax = int((xmax - xrange) + xrange/3)
+
+            ymin = int((ymin + yrange) - yrange/3) 
+            ymax = int((ymax - yrange) + yrange/3)
                        
+
+            print(xmin, xmax, ymin, ymax)
             # Draw label
-            object_name = labels[int(classes[i])] # Look up object name from "labels" array using class index
-            label = '%s: %d%%' % (object_name, int(curr_score[i]*100)) # Example: 'person: 72%'
-            labelSize, baseLine = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.7, 2) # Get font size
-            label_ymin = max(ymin, labelSize[1] + 10) # Make sure not to draw label too close to top of window
-            cv2.rectangle(frame, (xmin,ymin), (xmax,ymax), (10, 255, 0), 2)
+            #object_name = labels[int(classes[i])] # Look up object name from "labels" array using class index
+            #label = '%s: %d%%' % (object_name, int(curr_score[i]*100)) # Example: 'person: 72%'
+            #labelSize, baseLine = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.7, 2) # Get font size
+            #label_ymin = max(ymin, labelSize[1] + 10) # Make sure not to draw label too close to top of window
+            #cv2.rectangle(frame, (xmin,ymin), (xmax,ymax), (10, 255, 0), 2)
             #cv2.rectangle(frame, (xmin, label_ymin-labelSize[1]-10), (xmin+labelSize[0], label_ymin+baseLine-10), (255, 255, 255), cv2.FILLED) # Draw white box to put label text in
-            cv2.putText(frame, label, (xmin, label_ymin-7), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 2) # Draw label text
+            #cv2.putText(frame, label, (xmin, label_ymin-7), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 2) # Draw label text
             #if cType.getType() == "ball":
                 
             # Record current max
-            max_score = curr_score[i]
+            #max_score = curr_score[i]
             #max_index = i
             cropped = frame[ymin:ymax, xmin: xmax]
+
+
+            cv2.imwrite('image.jpg', cropped)
+            
+            
+
+
+
+            
             get_color(cropped)
             
 
     # Write Image (with bounding box) to file
-    cv2.imwrite('video.jpg', frame)
+    #cv2.imwrite('video.jpg', frame)
 
-    #cv2.imshow('video.jpg', frame)
+    cv2.imshow('video.jpg', frame)
 #if __name__ == '__main__':
     
-#    img = cv2.imread('image.jpg')
-#    find_ball(img)
+    #img = cv2.imread('image.jpg')
+    #cv2.imshow('video.jpg', img)
+    #find_ball(img)
